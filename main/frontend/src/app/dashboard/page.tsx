@@ -1,33 +1,26 @@
-import { getAuth } from "@/lib/auth"
-import { headers } from "next/headers"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { SignOutButton } from "./sign-out-button"
+import { syncUser } from "@/lib/sync-user"
 
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
-  const auth = await getAuth().catch(() => null)
-  if (!auth) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4 max-w-md">
-          <h1 className="text-2xl font-semibold text-text-primary">Configuration Required</h1>
-          <p className="text-text-secondary">
-            Set <code className="text-primary">DATABASE_URL</code> in{" "}
-            <code className="text-primary">.env.local</code> with your NeonDB connection string
-            to enable authentication.
-          </p>
-        </div>
-      </div>
-    )
+  const { isAuthenticated } = await auth()
+
+  if (!isAuthenticated) {
+    redirect("/sign-in")
   }
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
+  const user = await currentUser()
 
-  if (!session) {
-    redirect("/sign-in")
+  if (user) {
+    await syncUser({
+      id: user.id,
+      email: user.emailAddresses[0]?.emailAddress ?? "",
+      name: user.fullName ?? user.firstName ?? user.username ?? "User",
+      image: user.imageUrl,
+    })
   }
 
   return (
@@ -40,7 +33,7 @@ export default async function DashboardPage() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-text-secondary">
-              {session.user.email}
+              {user?.emailAddresses[0]?.emailAddress ?? ""}
             </span>
             <SignOutButton />
           </div>
@@ -51,7 +44,7 @@ export default async function DashboardPage() {
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold text-text-primary">
-              Welcome, {session.user.name}
+              Welcome, {user?.fullName ?? user?.firstName ?? "User"}
             </h1>
             <p className="text-text-secondary">
               You are signed in to WorkOS AI. Your workflows and automations will appear here.
@@ -64,11 +57,15 @@ export default async function DashboardPage() {
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-text-secondary">Name</dt>
-                  <dd className="text-text-primary">{session.user.name}</dd>
+                  <dd className="text-text-primary">{user?.fullName ?? "—"}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-text-secondary">Email</dt>
-                  <dd className="text-text-primary">{session.user.email}</dd>
+                  <dd className="text-text-primary">{user?.emailAddresses[0]?.emailAddress ?? "—"}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-text-secondary">User ID</dt>
+                  <dd className="text-text-primary font-mono text-xs">{user?.id}</dd>
                 </div>
               </dl>
             </div>

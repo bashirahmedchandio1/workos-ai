@@ -1,15 +1,16 @@
 "use client"
 
+import { useClerk } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
-import { signOut } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 
 export function SignOutButton() {
+  const clerk = useClerk()
   const router = useRouter()
 
   const handleSignOut = async () => {
-    await signOut()
-    router.push("/sign-in")
+    await clerk.signOut()
+    router.push("/")
   }
 
   return (

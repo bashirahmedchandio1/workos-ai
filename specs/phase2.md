@@ -17,7 +17,7 @@
 | Flow builder (frontend) | React Flow v12 + custom node/edge types | Already in Phase 1; the approval graph is a read-only preview — Phase 2 makes it fully editable |
 | Flow state | Zustand (client-side) + TanStack Query (persistence) | Real-time drag operations are client state; save/load are server queries |
 | Template storage | DB table `workflow_templates` + JSON plan cache | Templates are plans with metadata; no need for separate file storage |
-| Team invites | Better Auth organizations plugin | Already using Better Auth — native orgs, roles, invites |
+| Team invites | Clerk organizations | Already using Clerk — native orgs, roles, invites |
 | Activity feed | Denormalized `activity_events` table + WebSocket push | Avoids expensive joins for the feed view |
 | AI Memory store | `ai_memory` table (PostgreSQL) + in-memory LRU cache | User-specific JSON blobs; cache hot patterns |
 | Embeddings (memory) | OpenAI `text-embedding-3-small` | Semantic similarity for "remember similar workflows" |
