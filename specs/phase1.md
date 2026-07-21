@@ -19,8 +19,8 @@
 | Frontend framework | Next.js 16 + React 19 (App Router) | Per README; best-in-class DX |
 | Backend framework | FastAPI (Python 3.13) | Per README; async-native |
 | API contract | OpenAPI 3.1 (auto-generated from FastAPI + pydantic) | Single source of truth; TypeScript SDK gen |
-| Auth (web) | Better Auth (Next.js) | Per README; supports OAuth, sessions, orgs |
-| Auth (API) | JWT (python-jose + passlib) | Stateless; validated by FastAPI middleware |
+| Auth (web) | Clerk (Next.js) | Per README; managed auth with OAuth, MFA, sessions |
+| Auth (API) | Clerk JWT Validation (python-jose) | Stateless; validates Clerk-issued JWTs via JWKS |
 | Database | PostgreSQL (Neon) + SQLModel + Alembic | Per README; SQLModel = SQLAlchemy + Pydantic |
 | Async queue | Celery + Redis | Per README; workflow execution must be decoupled |
 | Scheduler | APScheduler | Per README; for watch/cron-style triggers |
@@ -96,8 +96,7 @@ users: id, email, name, avatar_url, created_at, updated_at
 organizations: id, name, slug, created_at
 organization_members: id, org_id, user_id, role (admin/member), created_at
 
--- Authentication
-sessions: id, user_id, token, expires_at, created_at   (Better Auth managed)
+-- Authentication (managed by Clerk)
 
 -- Connectors
 connector_definitions: id, key (e.g. "gmail"), name, description, auth_type
@@ -461,13 +460,19 @@ class Approval(BaseModel):
 
 ## 7. API Design (Phase 1)
 
-### 7.1 Authentication Endpoints
+### 7.1 Authentication
+
+Authentication is handled by **Clerk**. The frontend uses `<SignIn />`, `<SignUp />`, and `auth()` from `@clerk/nextjs`. The backend validates Clerk-issued JWTs via the JWKS endpoint.
 
 ```http
-POST   /api/auth/register          # { email, password, name }
-POST   /api/auth/login             # { email, password } → { token, user }
-POST   /api/auth/logout
-GET    /api/auth/me                # Current user profile
+# Clerk handles:
+# - Sign-in / Sign-up (managed UI components)
+# - Session management
+# - OAuth providers (Google, GitHub, etc.)
+# - MFA
+
+# Backend validates Clerk JWTs on every protected API call:
+GET    /api/auth/me                # Validates Clerk JWT → returns current user profile
 ```
 
 ### 7.2 Connector Endpoints
@@ -535,8 +540,8 @@ POST   /api/planner/refine         # Refine plan with user clarification
 | Path | Page | Description |
 |---|---|---|
 | `/` | Landing | Hero + sign-up CTA (simple, redirects to dashboard if authenticated) |
-| `/auth/login` | Login | Email/password + OAuth (Google) |
-| `/auth/register` | Register | Email/password + OAuth (Google) |
+| `/sign-in` | Login | Clerk-managed sign-in (email/password + OAuth) |
+| `/register` | Register | Clerk-managed sign-up (email/password + OAuth) |
 | `/dashboard` | Dashboard | Workflow list + "Create Workflow" button + connected connectors |
 | `/workflows/new` | New Workflow | Prompt input + AI planner preview |
 | `/workflows/[id]/approve` | Approval | React Flow graph + approve/reject |
@@ -566,16 +571,15 @@ POST   /api/planner/refine         # Refine plan with user clarification
 Backend:
   [ ] Scaffold FastAPI project (apps/api/)
   [ ] Set up Poetry/pyproject.toml, alembic, SQLModel base
-  [ ] Set up PostgreSQL schema (users, organizations, sessions)
-  [ ] Implement auth endpoints (register, login, logout, me)
-  [ ] JWT creation + validation middleware
+  [ ] Set up PostgreSQL schema (users, organizations)
+  [ ] Implement Clerk JWT validation middleware (JWKS verification)
   [ ] Docker Compose: api + postgres + redis
 
 Frontend:
   [ ] Scaffold login/register pages
-  [ ] Better Auth integration
-  [ ] Auth state management (Zustand + TanStack Query)
-  [ ] Protected route layout
+  [ ] Clerk integration (@clerk/nextjs)
+  [ ] Auth state management (ClerkProvider + useUser)
+  [ ] Protected route layout (proxy.ts with clerkMiddleware)
   [ ] Docker Compose: web
 
 Deliverable: User can register, log in, and see a blank dashboard.
@@ -772,13 +776,13 @@ Deliverable: Complete Phase 1 — user can run through the entire flow.
 | `apps/api/src/config.py` | Environment config (pydantic-settings) |
 | `apps/api/src/database.py` | SQLModel engine + session |
 | `apps/api/src/models/*.py` | SQLModel models (one per table group) |
-| `apps/api/src/routers/auth.py` | Auth endpoints |
+| `apps/api/src/routers/auth.py` | Clerk JWT validation + user profile endpoint |
 | `apps/api/src/routers/connectors.py` | Connector endpoints |
 | `apps/api/src/routers/workflows.py` | Workflow + execution endpoints |
 | `apps/api/src/routers/planner.py` | Planner endpoints |
 | `apps/api/src/services/planner.py` | AI planner logic |
 | `apps/api/src/services/executor.py` | DAG executor logic |
-| `apps/api/src/middleware/auth.py` | JWT validation middleware |
+| `apps/api/src/middleware/auth.py` | Clerk JWT validation middleware (JWKS) |
 | `apps/api/src/connectors/*.py` | Individual connector implementations |
 | `apps/api/src/worker.py` | Celery app definition |
 | `apps/api/tasks/execution.py` | Celery execution tasks |

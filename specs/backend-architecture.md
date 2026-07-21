@@ -160,11 +160,11 @@ main/backend/
 │   │
 │   ├── middleware/               # FastAPI middleware
 │   │   ├── __init__.py
-│   │   └── auth.py              # JWT validation
+│   │   └── auth.py              # Clerk JWT validation (JWKS)
 │   │
 │   ├── services/                # Business logic
 │   │   ├── __init__.py
-│   │   ├── auth_service.py
+│   │   ├── auth_service.py      # Clerk token verification + user lookup
 │   │   │
 │   │   ├── agents/              # OpenAI Agents SDK agents
 │   │   │   ├── __init__.py
@@ -684,8 +684,8 @@ QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=optional
 
 # Auth
-SECRET_KEY=random-32-char-min
-BETTER_AUTH_URL=http://localhost:3000
+CLERK_JWKS_URL=https://<your-clerk-domain>.clerk.accounts.dev/.well-known/jwks.json
+CLERK_PUBLISHABLE_KEY=pk_...
 
 # Connector OAuth (managed per-connector)
 GMAIL_CLIENT_ID=...
@@ -746,7 +746,7 @@ volumes:
 |----------|-----------|------|------------|
 | P0 | FastAPI scaffold + config | FastAPI, Pydantic | — |
 | P0 | Database models + migrations | SQLModel, Alembic | P0 |
-| P0 | Auth (register, login, JWT) | python-jose, passlib | P0 |
+| P0 | Auth (Clerk JWT validation) | python-jose, requests | P0 |
 | P1 | Qdrant service + memory CRUD | qdrant-client | P0 |
 | P1 | MCP connector base + registry | mcp SDK | P0 |
 | P1 | Gmail + Slack MCP servers | mcp SDK, httpx | P1 |
