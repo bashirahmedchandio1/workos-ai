@@ -477,7 +477,7 @@ Future workflows become smarter.
 
 ## Authentication
 
-- Better Auth
+- Clerk
 
 ---
 
@@ -553,8 +553,8 @@ Future workflows become smarter.
 
 ## Authentication
 
-- JWT
-- Better Auth Integration
+- Clerk (Frontend)
+- Clerk JWT Validation (Backend — python-jose)
 
 ---
 

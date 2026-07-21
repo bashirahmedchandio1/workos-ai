@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { useSession, signOut } from "@/lib/auth-client";
 
 const navLinks = [
   { label: "Product", href: "#features" },
@@ -16,7 +17,7 @@ const navLinks = [
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { data: session } = useSession();
+  const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 100);
@@ -56,7 +57,7 @@ export default function Navigation() {
       </div>
 
       <div className="hidden md:flex items-center gap-3">
-          {session ? (
+          {isLoaded && isSignedIn ? (
             <div className="flex items-center gap-3">
               <Link
                 href="/dashboard"
@@ -64,13 +65,7 @@ export default function Navigation() {
               >
                 Dashboard
               </Link>
-              <button
-                onClick={() => signOut()}
-                className="text-sm text-text-secondary hover:text-zinc-100 transition-colors flex items-center gap-1"
-              >
-                <LogOut size={14} />
-                Sign Out
-              </button>
+              <UserButton />
             </div>
           ) : (
             <>
@@ -118,7 +113,7 @@ export default function Navigation() {
                 </a>
               ))}
               <hr className="w-16 border-border" />
-              {session ? (
+              {isLoaded && isSignedIn ? (
                 <>
                     <Link
                       href="/dashboard"
@@ -127,12 +122,7 @@ export default function Navigation() {
                     >
                       Dashboard
                     </Link>
-                  <button
-                    onClick={() => { signOut(); setMenuOpen(false); }}
-                    className="text-lg text-text-secondary hover:text-zinc-100 transition-colors"
-                  >
-                    Sign Out
-                  </button>
+                  <UserButton />
                 </>
               ) : (
                 <>
