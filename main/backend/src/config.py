@@ -5,8 +5,8 @@ from functools import lru_cache
 class Settings(BaseSettings):
     database_url: str = "postgresql://workos:workos@localhost:5432/workos_ai"
     redis_url: str = "redis://localhost:6379/0"
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o"
+    openrouter_api_key: str = ""
+    openrouter_model: str = "openrouter/free"
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str = ""
     clerk_jwks_url: str = ""

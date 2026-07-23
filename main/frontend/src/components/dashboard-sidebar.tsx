@@ -172,7 +172,7 @@ export function DashboardSidebar({
                 <div className="space-y-1 pl-3 pt-1 pb-1 border-l border-border ml-[11px]">
                   {crmSubItems.map((sub) => {
                     const SubIcon = sub.icon
-                    const isSubActive = pathname === sub.href
+                    const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + "/")
                     return (
                       <Link
                         key={sub.href}

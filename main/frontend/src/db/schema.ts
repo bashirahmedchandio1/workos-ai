@@ -5,6 +5,8 @@ import {
   uniqueIndex,
   unique,
   uuid,
+  boolean,
+  index,
 } from "drizzle-orm/pg-core"
 
 export const users = pgTable(
@@ -43,4 +45,22 @@ export const connectedAccounts = pgTable(
   })
 )
 
-export const schema = { users, connectedAccounts }
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    priority: text("priority").notNull().default("medium"),
+    dueDate: timestamp("due_date", { withTimezone: true }),
+    completed: boolean("completed").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userTasksIdx: index("user_tasks_idx").on(table.userId),
+  })
+)
+
+export const schema = { users, connectedAccounts, tasks }

@@ -7,8 +7,8 @@ from src.models.workflow import Workflow
 from src.middleware.auth import get_current_user
 from src.services.workflow.dag import execute_dag
 from src.services.workflow.step_resolver import resolve_input_mapping
-from src.services.agents.executor import executor_agent
 from agents import Runner, trace
+from src.services.mcp.manager import get_mcp_manager
 from datetime import datetime, timezone
 import json
 import asyncio
@@ -58,40 +58,42 @@ async def execute_workflow(
             steps = [trigger] + steps
         dependencies = plan.get("dependencies", {})
 
-        async def execute_step(step: dict, context: dict, run_id: str):
-            step_config = step.get("config", {})
-            input_mapping = step.get("input_mapping", {})
-            resolved_config = resolve_input_mapping(step_config, input_mapping, context)
+        manager = get_mcp_manager()
+        async with manager.executor_agent() as execution_agent:
+            async def execute_step(step: dict, context: dict, run_id: str):
+                step_config = step.get("config", {})
+                input_mapping = step.get("input_mapping", {})
+                resolved_config = resolve_input_mapping(step_config, input_mapping, context)
 
-            log = ExecutionLog(
-                workflow_run_id=run_id,
-                step_id=step["id"],
-                level="info",
-                message=f"Executing step: {step.get('label', step['id'])} on {step['connector_key']}",
-            )
-            session.add(log)
-            session.commit()
-
-            with trace(f"Step {step['id']}", group_id=run_id):
-                result = await Runner.run(
-                    executor_agent,
-                    f"Execute step {step.get('label', step['id'])}: connector={step['connector_key']}, operation={step.get('operation', '')}, config={json.dumps(resolved_config)}",
+                log = ExecutionLog(
+                    workflow_run_id=run_id,
+                    step_id=step["id"],
+                    level="info",
+                    message=f"Executing step: {step.get('label', step['id'])} on {step['connector_key']}",
                 )
+                session.add(log)
+                session.commit()
 
-            output = result.final_output
-            log = ExecutionLog(
-                workflow_run_id=run_id,
-                step_id=step["id"],
-                level="info",
-                message=f"Step completed: {step.get('label', step['id'])}",
-                metadata=json.dumps({"output": str(output)}),
-            )
-            session.add(log)
-            session.commit()
+                with trace(f"Step {step['id']}", group_id=run_id):
+                    result = await Runner.run(
+                        execution_agent,
+                        f"Execute step {step.get('label', step['id'])}: connector={step['connector_key']}, operation={step.get('operation', '')}, config={json.dumps(resolved_config)}",
+                    )
 
-            return {"step_id": step["id"], "output": output, "status": "completed"}
+                output = result.final_output
+                log = ExecutionLog(
+                    workflow_run_id=run_id,
+                    step_id=step["id"],
+                    level="info",
+                    message=f"Step completed: {step.get('label', step['id'])}",
+                    metadata=json.dumps({"output": str(output)}),
+                )
+                session.add(log)
+                session.commit()
 
-        exec_result = await execute_dag(steps, dependencies, execute_step, run.id)
+                return {"step_id": step["id"], "output": output, "status": "completed"}
+
+            exec_result = await execute_dag(steps, dependencies, execute_step, run.id)
 
         run.status = exec_result["status"]
         run.completed_at = datetime.now(timezone.utc)

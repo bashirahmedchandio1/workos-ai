@@ -101,3 +101,22 @@ def _register_default_connectors(registry: MCPRegistry):
             {"name": "append_block", "description": "Append content block to a Notion page", "input_schema": {"type": "object", "properties": {"page_id": {"type": "string"}, "block_type": {"type": "string"}, "content": {"type": "string"}}}},
         ],
     ))
+    registry.register(ConnectorInfo(
+        key="messenger",
+        name="Facebook Messenger",
+        operations=[
+            {"name": "send_message", "description": "Send a Facebook Messenger message", "input_schema": {"type": "object", "properties": {"recipient_id": {"type": "string"}, "text": {"type": "string"}}, "required": ["recipient_id", "text"]}},
+            {"name": "send_attachment", "description": "Send an attachment via Messenger", "input_schema": {"type": "object", "properties": {"recipient_id": {"type": "string"}, "attachment_url": {"type": "string"}, "attachment_type": {"type": "string"}}}},
+            {"name": "get_conversations", "description": "Get recent Messenger conversations", "input_schema": {"type": "object", "properties": {"limit": {"type": "integer"}}}},
+        ],
+    ))
+    registry.register(ConnectorInfo(
+        key="instagram",
+        name="Instagram",
+        operations=[
+            {"name": "send_dm", "description": "Send an Instagram Direct Message", "input_schema": {"type": "object", "properties": {"recipient_id": {"type": "string"}, "text": {"type": "string"}}, "required": ["recipient_id", "text"]}},
+            {"name": "get_profile", "description": "Get Instagram user profile info", "input_schema": {"type": "object", "properties": {"username": {"type": "string"}}}},
+            {"name": "get_media", "description": "Get recent Instagram posts", "input_schema": {"type": "object", "properties": {"username": {"type": "string"}, "limit": {"type": "integer"}}}},
+            {"name": "comment", "description": "Comment on an Instagram post", "input_schema": {"type": "object", "properties": {"media_id": {"type": "string"}, "text": {"type": "string"}}}},
+        ],
+    ))

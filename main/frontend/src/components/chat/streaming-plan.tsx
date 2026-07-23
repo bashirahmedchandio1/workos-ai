@@ -48,9 +48,13 @@ export function StreamingPlan({ steps, isStreaming, error }: StreamingPlanProps)
         <Sparkles size={16} className="text-primary" />
         <span className="text-sm font-semibold text-text-primary">Workflow Plan</span>
         {isStreaming && (
-          <span className="flex items-center gap-1 text-xs text-text-tertiary">
-            <span className="inline-block size-1.5 rounded-full bg-primary animate-pulse" />
-            Generating...
+          <span className="flex items-center gap-1.5 text-xs text-text-tertiary">
+            <span className="flex gap-0.5">
+              <span className="size-1 rounded-full bg-text-tertiary animate-bounce [animation-delay:0ms]" />
+              <span className="size-1 rounded-full bg-text-tertiary animate-bounce [animation-delay:150ms]" />
+              <span className="size-1 rounded-full bg-text-tertiary animate-bounce [animation-delay:300ms]" />
+            </span>
+            Thinking...
           </span>
         )}
       </div>

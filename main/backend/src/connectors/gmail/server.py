@@ -1,6 +1,4 @@
 from mcp.server import Server
-from mcp.server.models import InitializationOptions
-import httpx
 
 
 mcp = Server("Gmail Connector")
@@ -9,7 +7,6 @@ mcp = Server("Gmail Connector")
 @mcp.tool()
 async def send_email(to: str, subject: str, body: str) -> dict:
     """Send an email via Gmail."""
-    # In production, this calls the Gmail API with proper auth
     return {"status": "sent", "message_id": "mock_msg_id", "to": to, "subject": subject}
 
 
